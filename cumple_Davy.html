@@ -9,7 +9,8 @@
     html,body{ height:100%; }
     body{
       margin:0;
-      overflow:hidden;
+        min-height:100dvh;
+        overflow:hidden;
       font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial;
       color:#0b1020;
       background:
@@ -383,12 +384,17 @@
 
     /* Responsivo */
     @media (max-width: 860px){
-      .card{ grid-template-columns: 1fr; }
+      .card{ 
+        grid-template-columns: 1fr;
+        overflow:auto;
+        -webkit-overflow-scrolling: touch; 
+     }
     }
-    @media (max-width: 420px){
-      .gifts{ grid-template-columns: repeat(2, 1fr); }
-      button{ width:100%; }
-      .controls{ flex-direction:column; }
+    @media (max-width: 520px){
+      .balloon{
+        width: 86px !important;
+        height: 110px !important;
+     }
     }
 
     /* Debug flotante (si quieres ver que sí capta clicks) */
@@ -630,6 +636,25 @@
       `;
 
       let dragging=false, offX=0, offY=0;
+        let pressTimer = null;
+        b.addEventListener("pointerdown", (e)=>{
+        pressTimer = setTimeout(()=>{
+            sparkAt(e.clientX, e.clientY, 14);
+            confettiBurst(e.clientX, e.clientY, 60);
+            b.style.transition="transform .12s ease, opacity .12s ease";
+            b.style.transform="scale(.6)";
+            b.style.opacity="0";
+            setTimeout(()=>b.remove(), 140);
+        }, 520); // mantener presionado ~0.5s
+        });
+
+        b.addEventListener("pointerup", ()=>{ 
+        if(pressTimer) clearTimeout(pressTimer); 
+        });
+        b.addEventListener("pointercancel", ()=>{ 
+        if(pressTimer) clearTimeout(pressTimer); 
+        });
+
       b.addEventListener("pointerdown",(e)=>{
         dragging=true;
         b.setPointerCapture(e.pointerId);

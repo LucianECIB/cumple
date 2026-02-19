@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>🎂 Cumple de Davy</title>
+  <style>
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      overflow:hidden;
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      color:#0b1020;
+      background:
+        radial-gradient(1200px 700px at 15% 15%, rgba(255,255,255,.75), transparent 55%),
+        radial-gradient(900px 600px at 80% 25%, rgba(255,170,220,.35), transparent 60%),
+        radial-gradient(900px 600px at 35% 80%, rgba(120,190,255,.30), transparent 60%),
+        linear-gradient(180deg,#ffe8f2,#f6fbff 60%, #ffffff);
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    /* Capas (IMPORTANTE: las capas de partículas NO deben capturar clics) */
+    #sparkLayer, #confettiLayer { position:fixed; inset:0; pointer-events:none; }
+    #confettiLayer{ z-index:80; }
+    #sparkLayer{ z-index:70; }
+
+    /* Globos sí interactivos, pero debajo del UI */
+    #balloonLayer{
+      position:fixed; inset:0;
+      z-index:20;
+      pointer-events:auto;
+    }
+
+    /* UI principal SIEMPRE arriba */
+    .wrap{
+      position:fixed; inset:0;
+      display:grid;
+      place-items:center;
+      padding:18px;
+      z-index:50; /* arriba de globos */
+      pointer-events:none; /* OJO: desactivamos por defecto */
+    }
+    .card{
+      pointer-events:auto; /* y lo activamos en la tarjeta */
+      width:min(980px, 96vw);
+      max-height: calc(100dvh - 36px);
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap:14px;
+      padding:16px;
+      border-radius:22px;
+      background: rgba(255,255,255,.72);
+      border:1px solid rgba(0,0,0,.06);
+      box-shadow: 0 24px 90px rgba(0,0,0,.18);
+      backdrop-filter: blur(10px);
+      overflow:hidden;
+    }
+
+    .left{
+      display:flex; flex-direction:column;
+      gap:12px; min-height: 320px;
+    }
+    .titleRow{
+      display:flex; align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+    }
+    h1{
+      margin:0;
+      font-size: clamp(22px, 3.6vw, 44px);
+      line-height:1.05;
+    }
+    .subtitle{
+      margin:4px 0 0 0;
+      opacity:.82;
+      font-size: clamp(12px, 1.6vw, 16px);
+    }
+    .pillRow{ display:flex; gap:8px; flex-wrap:wrap; }
+    .pill{
+      padding:8px 10px;
+      border-radius:999px;
+      background: rgba(0,0,0,.05);
+      border:1px solid rgba(0,0,0,.06);
+      font-weight:800;
+      font-size:12px;
+      user-select:none;
+    }
+
+    .bigStage{
+      flex:1;
+      border-radius:18px;
+      background:
+        radial-gradient(900px 520px at 30% 25%, rgba(255,146,201,.25), transparent 55%),
+        radial-gradient(760px 520px at 70% 35%, rgba(124,205,255,.22), transparent 60%),
+        linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.65));
+      border:1px solid rgba(0,0,0,.06);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.6);
+      overflow:hidden;
+      position:relative;
+      display:grid;
+      place-items:center;
+      padding:14px;
+    }
+
+    .cakeWrap{
+      width:min(520px, 92%);
+      aspect-ratio: 16/11;
+      position:relative;
+      display:grid;
+      place-items:center;
+      user-select:none;
+    }
+    .hint{
+      position:absolute;
+      bottom:12px; left:12px; right:12px;
+      text-align:center;
+      font-weight:900;
+      font-size: clamp(12px, 1.6vw, 14px);
+      opacity:.78;
+      background: rgba(255,255,255,.72);
+      border:1px solid rgba(0,0,0,.05);
+      padding:8px 10px;
+      border-radius:12px;
+    }
+
+    .controls{
+      display:flex; gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-start;
+    }
+    button{
+      border:0;
+      border-radius:14px;
+      padding:12px 14px;
+      font-weight:900;
+      cursor:pointer;
+      transition: transform .12s ease, filter .2s ease;
+      user-select:none;
+      touch-action: manipulation;
+    }
+    button:active{ transform: scale(.98); }
+    .btnPrimary{
+      background: linear-gradient(180deg, #ff4d9a, #c026d3);
+      color:#fff;
+      box-shadow: 0 16px 30px rgba(192,38,211,.20);
+    }
+    .btnDark{
+      background:#111827;
+      color:#fff;
+      box-shadow: 0 16px 28px rgba(17,24,39,.18);
+    }
+    .btnSoft{
+      background: rgba(0,0,0,.06);
+      color:#111827;
+      border:1px solid rgba(0,0,0,.08);
+    }
+
+    .right{
+      display:flex; flex-direction:column;
+      gap:12px; min-height: 320px;
+    }
+    .panel{
+      border-radius:18px;
+      background: rgba(255,255,255,.65);
+      border:1px solid rgba(0,0,0,.06);
+      padding:12px;
+      overflow:hidden;
+    }
+    .panel h2{
+      margin:0 0 8px 0;
+      font-size: clamp(14px, 1.9vw, 18px);
+    }
+    .panel p{ margin:0; opacity:.82; font-size:13px; line-height:1.45; }
+
+    .gifts{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:10px;
+    }
+    .gift{
+      border-radius:16px;
+      padding:10px;
+      background:
+        radial-gradient(120px 80px at 30% 25%, rgba(255,255,255,.6), transparent 60%),
+        linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.55));
+      border:1px solid rgba(0,0,0,.06);
+      cursor:pointer;
+      transition: transform .12s ease;
+      position:relative;
+      overflow:hidden;
+      min-height: 90px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+    }
+    .gift:hover{ transform: translateY(-2px); }
+    .gift .emoji{ font-size: 28px; }
+    .gift .label{ font-weight:900; font-size:12px; opacity:.75; }
+    .gift .shine{
+      position:absolute; inset:-40%;
+      background: linear-gradient(90deg, transparent 35%, rgba(255,255,255,.55) 50%, transparent 65%);
+      transform: rotate(20deg);
+      animation: shine 3.4s ease-in-out infinite;
+      opacity:.35;
+      pointer-events:none;
+    }
+    @keyframes shine{
+      0%{ transform: translateX(-30%) rotate(20deg); }
+      50%{ transform: translateX(30%) rotate(20deg); }
+      100%{ transform: translateX(-30%) rotate(20deg); }
+    }
+
+    /* Modal */
+    .modal{
+      position:fixed; inset:0;
+      display:none;
+      place-items:center;
+      padding:16px;
+      background: rgba(0,0,0,.40);
+      z-index:120;
+    }
+    .modal.show{ display:grid; }
+    .modalCard{
+      width:min(560px, 94vw);
+      max-height: min(78dvh, 640px);
+      overflow:auto;
+      border-radius:20px;
+      background: rgba(255,255,255,.92);
+      border:1px solid rgba(0,0,0,.10);
+      box-shadow: 0 26px 80px rgba(0,0,0,.35);
+      padding:14px;
+    }
+    .modalTop{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .modalTop .tag{
+      font-weight:900;
+      font-size:12px;
+      padding:7px 10px;
+      border-radius:999px;
+      background: rgba(192,38,211,.10);
+      color:#6b21a8;
+      border:1px solid rgba(192,38,211,.15);
+    }
+    .modalClose{
+      border:0;
+      border-radius:12px;
+      padding:10px 12px;
+      font-weight:900;
+      cursor:pointer;
+      background:#111827;
+      color:#fff;
+    }
+    .modalBody{
+      border-radius:16px;
+      border:3px dotted rgba(0,48,73,.25);
+      padding:12px;
+      line-height:1.55;
+      color:#0f172a;
+      font-size: 14px;
+      white-space: pre-wrap;
+    }
+
+    /* Slider */
+    .sliderRow{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin-top:10px;
+    }
+    input[type="range"]{ width:100%; }
+    .mood{
+      font-weight:900;
+      font-size:12px;
+      background: rgba(0,0,0,.06);
+      border:1px solid rgba(0,0,0,.08);
+      padding:7px 10px;
+      border-radius:999px;
+      white-space:nowrap;
+    }
+
+    .nameRow{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-top:6px;
+    }
+    .nameRow input{
+      flex:1;
+      min-width: 180px;
+      border-radius:14px;
+      border:1px solid rgba(0,0,0,.10);
+      padding:12px 12px;
+      font-weight:800;
+      outline:none;
+      background: rgba(255,255,255,.85);
+    }
+
+    /* Globos */
+    .balloon{
+      position:absolute;
+      width: 110px;
+      height: 140px;
+      pointer-events:auto;
+      cursor: grab;
+      user-select:none;
+      touch-action:none;
+      filter: drop-shadow(0 18px 20px rgba(0,0,0,.12));
+    }
+    .balloon:active{ cursor: grabbing; }
+    .balloon .b{
+      width:100%; height:100%;
+      border-radius: 60% 60% 55% 55%;
+      position:relative;
+    }
+    .balloon .b::after{
+      content:"";
+      position:absolute;
+      left:50%;
+      bottom:-10px;
+      width:14px; height:14px;
+      transform:translateX(-50%) rotate(45deg);
+      background: inherit;
+      border-radius: 3px;
+    }
+    .balloon .s{
+      position:absolute;
+      left:50%;
+      top: calc(100% - 8px);
+      width:2px;
+      height: 120px;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,.12);
+    }
+    .balloon .pop{
+      position:absolute;
+      inset:0;
+      display:grid;
+      place-items:center;
+      font-size: 18px;
+      font-weight: 900;
+      color: rgba(255,255,255,.85);
+      text-shadow: 0 8px 16px rgba(0,0,0,.2);
+      pointer-events:none;
+    }
+
+    /* Confetti */
+    .conf{
+      position:absolute;
+      width:10px; height:14px;
+      border-radius: 3px;
+      opacity:.95;
+      transform: translate(-50%,-50%) rotate(0deg);
+      animation: fall var(--t) linear forwards;
+    }
+    @keyframes fall{
+      to{
+        transform: translate(calc(var(--dx) * 1px), calc(var(--dy) * 1px)) rotate(720deg);
+        opacity:0;
+      }
+    }
+
+    /* Sparks */
+    .spark{
+      position:absolute;
+      font-size:18px;
+      animation: spark 650ms ease-out forwards;
+      transform: translate(-50%,-50%);
+      opacity:0;
+    }
+    @keyframes spark{
+      0%{ opacity:0; transform: translate(-50%,-50%) scale(.3); }
+      20%{ opacity:1; }
+      100%{ opacity:0; transform: translate(calc(-50% + var(--sx)), calc(-50% + var(--sy))) scale(1.3); }
+    }
+
+    /* Responsivo */
+    @media (max-width: 860px){
+      .card{ grid-template-columns: 1fr; }
+    }
+    @media (max-width: 420px){
+      .gifts{ grid-template-columns: repeat(2, 1fr); }
+      button{ width:100%; }
+      .controls{ flex-direction:column; }
+    }
+
+    /* Debug flotante (si quieres ver que sí capta clicks) */
+    .debug{
+      position:fixed;
+      left:12px; bottom:12px;
+      z-index:200;
+      background: rgba(17,24,39,.82);
+      color:#fff;
+      padding:8px 10px;
+      border-radius:12px;
+      font-weight:900;
+      font-size:12px;
+      pointer-events:none;
+      opacity:.9;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="sparkLayer"></div>
+  <div id="confettiLayer"></div>
+  <div id="balloonLayer"></div>
+
+  <div class="wrap">
+    <div class="card" id="mainCard">
+      <div class="left">
+        <div class="titleRow">
+          <div>
+            <h1 id="title">🎉 ¡Feliz Cumple, Davy!</h1>
+            <div class="subtitle" id="subtitle">Toca los botones, apaga velas y abre regalos 🎁✨</div>
+          </div>
+          <div class="pillRow">
+            <div class="pill">🎈 Arrastra globos</div>
+            <div class="pill">🎁 Abre regalos</div>
+            <div class="pill">🔥 Apaga velas</div>
+          </div>
+        </div>
+
+        <div class="bigStage" id="stage">
+          <div class="cakeWrap" id="cakeWrap">
+            <svg viewBox="0 0 640 440" width="100%" height="100%">
+              <ellipse cx="320" cy="385" rx="240" ry="34" fill="rgba(15,23,42,.08)"/>
+              <ellipse cx="320" cy="380" rx="260" ry="42" fill="rgba(255,255,255,.65)"/>
+
+              <path d="M150 340 C150 300, 490 300, 490 340 L490 360 C490 395, 150 395, 150 360 Z"
+                    fill="#ffd0e2" stroke="rgba(0,0,0,.06)" stroke-width="2"/>
+              <path d="M150 308 C170 290, 200 320, 220 300
+                       C240 280, 270 318, 290 298
+                       C310 278, 340 318, 360 298
+                       C380 278, 410 320, 430 300
+                       C450 280, 480 318, 490 308
+                       L490 340 L150 340 Z"
+                    fill="#fff2f7" stroke="rgba(0,0,0,.04)" stroke-width="2"/>
+
+              <path d="M180 260 C180 230, 460 230, 460 260 L460 308 L180 308 Z"
+                    fill="#ffe9b8" stroke="rgba(0,0,0,.06)" stroke-width="2"/>
+              <path d="M180 280 C200 265, 230 290, 250 272
+                       C270 254, 300 292, 320 274
+                       C340 256, 370 292, 390 274
+                       C410 256, 440 290, 460 276
+                       L460 308 L180 308 Z"
+                    fill="#fff7d6" stroke="rgba(0,0,0,.03)" stroke-width="2"/>
+
+              <!-- VELAS (IMPORTANTE: cursor y pointer-events en SVG) -->
+              <g id="candles" style="cursor:pointer;">
+                <g class="candle" data-off="0">
+                  <rect x="240" y="160" width="26" height="90" rx="10" fill="#7dd3fc" />
+                  <circle class="flame" cx="253" cy="150" r="14" fill="#ffb703" opacity="1"/>
+                  <circle class="flame" cx="253" cy="146" r="8" fill="#ffd60a" opacity="1"/>
+                </g>
+                <g class="candle" data-off="0">
+                  <rect x="308" y="150" width="26" height="100" rx="10" fill="#fda4af" />
+                  <circle class="flame" cx="321" cy="140" r="14" fill="#ffb703" opacity="1"/>
+                  <circle class="flame" cx="321" cy="136" r="8" fill="#ffd60a" opacity="1"/>
+                </g>
+                <g class="candle" data-off="0">
+                  <rect x="376" y="160" width="26" height="90" rx="10" fill="#c4b5fd" />
+                  <circle class="flame" cx="389" cy="150" r="14" fill="#ffb703" opacity="1"/>
+                  <circle class="flame" cx="389" cy="146" r="8" fill="#ffd60a" opacity="1"/>
+                </g>
+              </g>
+
+              <g opacity=".9">
+                <rect x="210" y="310" width="14" height="4" rx="2" fill="#ff4d9a"/>
+                <rect x="260" y="320" width="14" height="4" rx="2" fill="#22c55e"/>
+                <rect x="300" y="312" width="14" height="4" rx="2" fill="#3b82f6"/>
+                <rect x="340" y="325" width="14" height="4" rx="2" fill="#f59e0b"/>
+                <rect x="390" y="318" width="14" height="4" rx="2" fill="#a855f7"/>
+              </g>
+
+              <text x="320" y="345" text-anchor="middle" font-size="28" font-weight="900" fill="rgba(15,23,42,.75)">
+                🎂
+              </text>
+            </svg>
+
+            <div class="hint" id="hint">👉 Toca una vela para apagarla. Apaga las 3 para sorpresa 🎊</div>
+          </div>
+        </div>
+
+        <div class="controls">
+          <button class="btnPrimary" id="btnParty" type="button">🎉 Modo fiesta</button>
+          <button class="btnSoft" id="btnBalloons" type="button">🎈 Más globos</button>
+          <button class="btnSoft" id="btnConfetti" type="button">✨ Confetti</button>
+          <button class="btnDark" id="btnReset" type="button">🔄 Reiniciar</button>
+        </div>
+      </div>
+
+      <div class="right">
+        <div class="panel">
+          <h2>Personaliza el saludo</h2>
+          <p>Si escribes otro nombre, cambia el título.</p>
+          <div class="nameRow">
+            <input id="nameInput" placeholder="Nombre (por defecto: Davy)" maxlength="32" />
+            <button class="btnPrimary" id="btnApply" type="button">Aplicar ✨</button>
+          </div>
+
+          <div class="sliderRow">
+            <input id="moodRange" type="range" min="0" max="100" value="70" />
+            <div class="mood" id="moodLabel">Mood: 🎉 Fiesta</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>🎁 Regalos (toca para abrir)</h2>
+          <div class="gifts" id="gifts">
+            <div class="gift" data-g="0"><div class="shine"></div><div class="emoji">🎁</div><div class="label">Mensaje 1</div></div>
+            <div class="gift" data-g="1"><div class="shine"></div><div class="emoji">🍰</div><div class="label">Mensaje 2</div></div>
+            <div class="gift" data-g="2"><div class="shine"></div><div class="emoji">🌟</div><div class="label">Mensaje 3</div></div>
+            <div class="gift" data-g="3"><div class="shine"></div><div class="emoji">📸</div><div class="label">Foto</div></div>
+            <div class="gift" data-g="4"><div class="shine"></div><div class="emoji">🎈</div><div class="label">Mensaje 4</div></div>
+            <div class="gift" data-g="5"><div class="shine"></div><div class="emoji">✨</div><div class="label">Mensaje 5</div></div>
+          </div>
+          <p style="margin-top:10px; opacity:.75; font-size:12px;">Tip: toca el fondo para chispas ✨</p>
+        </div>
+
+        <div class="panel">
+          <h2>📌 Interacciones</h2>
+          <p>
+            • Botones: fiesta / globos / confetti / reset<br>
+            • Velas: toca para apagar/encender 🔥<br>
+            • Globos: arrastra y doble toque para reventar 💥<br>
+            • Regalos: abren mensajes en una ventana 🎁
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal" id="modal">
+    <div class="modalCard">
+      <div class="modalTop">
+        <div class="tag" id="modalTag">🎁 Regalo</div>
+        <button class="modalClose" id="modalClose" type="button">Cerrar</button>
+      </div>
+      <div class="modalBody" id="modalBody"></div>
+    </div>
+  </div>
+
+  <div class="debug" id="debug">Debug: listo ✅</div>
+
+  <script>
+    const $ = (q)=>document.querySelector(q);
+
+    const confettiLayer = $("#confettiLayer");
+    const sparkLayer = $("#sparkLayer");
+    const balloonLayer = $("#balloonLayer");
+    const debug = $("#debug");
+
+    const rand = (a,b)=> a + Math.random()*(b-a);
+    const clamp = (v,min,max)=> Math.max(min, Math.min(max,v));
+
+    function logDebug(txt){
+      debug.textContent = "Debug: " + txt;
+    }
+
+    // ===== Chispas =====
+    const SPARKS = ["✨","⭐","💛","💖","🎉","🌟"];
+    function sparkAt(x,y, n=10){
+      for(let i=0;i<n;i++){
+        const s = document.createElement("div");
+        s.className="spark";
+        s.textContent = SPARKS[(Math.random()*SPARKS.length)|0];
+        s.style.left = x+"px";
+        s.style.top  = y+"px";
+        s.style.setProperty("--sx", (rand(-120,120)).toFixed(0)+"px");
+        s.style.setProperty("--sy", (rand(-140,80)).toFixed(0)+"px");
+        s.style.animationDelay = (Math.random()*0.05)+"s";
+        sparkLayer.appendChild(s);
+        setTimeout(()=>s.remove(), 700);
+      }
+    }
+
+    // Fondo chispas (no en botones / input / modal / regalos)
+    document.addEventListener("pointerup", (e)=>{
+      const t = e.target;
+      if(t.closest("button") || t.closest("input") || t.closest(".gift") || t.closest(".modalCard")) return;
+      sparkAt(e.clientX, e.clientY, 8);
+    });
+
+    // ===== Confetti =====
+    function confettiBurst(x,y, amount=140){
+      for(let i=0;i<amount;i++){
+        const c=document.createElement("div");
+        c.className="conf";
+        c.style.left=x+"px";
+        c.style.top=y+"px";
+        c.style.setProperty("--dx", (rand(-240,240)).toFixed(0));
+        c.style.setProperty("--dy", (rand(280,820)).toFixed(0));
+        c.style.setProperty("--t", rand(0.9,1.7).toFixed(2)+"s");
+        c.style.background = `hsl(${Math.floor(rand(0,360))} 95% 70%)`;
+        c.style.width = rand(7,12).toFixed(0)+"px";
+        c.style.height = rand(9,16).toFixed(0)+"px";
+        c.style.borderRadius = Math.random()>.5 ? "999px" : "3px";
+        confettiLayer.appendChild(c);
+        setTimeout(()=>c.remove(), 2000);
+      }
+    }
+
+    // ===== Globos =====
+    function makeBalloon(){
+      const b = document.createElement("div");
+      b.className="balloon";
+      const w = rand(80,130);
+      b.style.width = w.toFixed(0)+"px";
+      b.style.height = (w*1.25).toFixed(0)+"px";
+      b.style.left = rand(10,90)+"vw";
+      b.style.top  = rand(25,85)+"vh";
+
+      const hue = Math.floor(rand(0,360));
+      b.innerHTML = `
+        <div class="b" style="background:
+          radial-gradient(circle at 30% 25%, rgba(255,255,255,.65), transparent 35%),
+          linear-gradient(180deg, hsla(${hue} 95% 70% /.98), hsla(${(hue+40)%360} 85% 55% /.95));">
+          <div class="pop">🎈</div>
+        </div>
+        <div class="s"></div>
+      `;
+
+      let dragging=false, offX=0, offY=0;
+      b.addEventListener("pointerdown",(e)=>{
+        dragging=true;
+        b.setPointerCapture(e.pointerId);
+        const r=b.getBoundingClientRect();
+        offX = e.clientX - r.left;
+        offY = e.clientY - r.top;
+      });
+      b.addEventListener("pointermove",(e)=>{
+        if(!dragging) return;
+        const x = clamp(e.clientX - offX, 6, window.innerWidth - b.offsetWidth - 6);
+        const y = clamp(e.clientY - offY, 6, window.innerHeight - b.offsetHeight - 6);
+        b.style.left = x+"px";
+        b.style.top  = y+"px";
+      });
+      b.addEventListener("pointerup",()=> dragging=false);
+
+      // Doble toque = pop
+      let last=0;
+      b.addEventListener("pointerup",(e)=>{
+        const now=Date.now();
+        if(now-last<260){
+          sparkAt(e.clientX, e.clientY, 14);
+          confettiBurst(e.clientX, e.clientY, 60);
+          b.style.transition="transform .12s ease, opacity .12s ease";
+          b.style.transform="scale(.6)";
+          b.style.opacity="0";
+          setTimeout(()=>b.remove(), 140);
+        }
+        last=now;
+      });
+
+      balloonLayer.appendChild(b);
+    }
+    function addBalloons(n=3){ for(let i=0;i<n;i++) makeBalloon(); }
+
+    // ===== Velas =====
+    const candleGroup = $("#candles");
+    const hint = $("#hint");
+    let flamesOn = 3;
+
+    function toggleCandle(candleEl){
+      const flames = candleEl.querySelectorAll(".flame");
+      const isOff = candleEl.dataset.off === "1";
+      if(isOff){
+        flames.forEach(f=>f.style.opacity="1");
+        candleEl.dataset.off="0";
+        flamesOn++;
+      }else{
+        flames.forEach(f=>f.style.opacity="0");
+        candleEl.dataset.off="1";
+        flamesOn--;
+      }
+      if(flamesOn<=0){
+        hint.textContent = "🎊 ¡Sorpresa, Davy! ¡Cumple logrado! Presiona “Modo fiesta” 🎉";
+        confettiBurst(window.innerWidth/2, window.innerHeight*0.25, 220);
+        addBalloons(4);
+      }else{
+        hint.textContent = `🔥 Velas encendidas: ${flamesOn}. (Toca para apagar/encender)`;
+      }
+    }
+
+    candleGroup.addEventListener("pointerup",(e)=>{
+      const candle = e.target.closest(".candle");
+      if(!candle) return;
+      sparkAt(e.clientX, e.clientY, 10);
+      toggleCandle(candle);
+      logDebug("Vela tocada ✅");
+    });
+
+    // ===== Modal / regalos =====
+    const modal = $("#modal");
+    const modalClose = $("#modalClose");
+    const modalTag = $("#modalTag");
+    const modalBody = $("#modalBody");
+
+    const messages = [
+      "🎁 Mensaje 1\n\nHoy es un día especial porque celebramos tu vida, Davy. Quiero que sepas que eres una persona increíble, de esas que dejan huella sin darse cuenta, tu forma de ser, tu manera de ver la vida y tu esencia hacen que quienes te rodean se sientan afortunados de conocerte, deseo que este nuevo año te regale muchas alegrías, sueños cumplidos y momentos que te llenen el corazón, nunca olvides lo valioso que eres. Feliz cumpleaños. ✨",
+      "🍰 Mensaje 2\n\nHoy quiero aprovechar tu cumpleaños para agradecerte por todo lo que eres, gracias por tu amistad, por tu compañía, por las risas y por esos momentos que se vuelven recuerdos inolvidables, porque tú hacen la vida más bonita. Espero que todo lo bueno que das regrese multiplicado a tu vida, que este nuevo año esté lleno de bendiciones y felicidad para ti.",
+      "🌟 Mensaje 3\n\nHoy espero que la pases súper lindo, que te consientan mucho, que sonrías todo el día y que comas muchísimo pastel, porque te lo mereces, igual quiero que sepas que te debo un pastelito, mucho helado, chocolate y hasta el regalito que tú quieras, todo eso queda pendiente para cuando te vea, así que oficialmente te lo estoy debiendo, espero que disfrutes muchísimo tu día, que recibas muchas cosas bonitas y que este nuevo año te traiga momentos increíbles.",
+      "📸 Foto\n\nDe tus niños para tí 💛",
+      "🎈 Mensaje 4\n\nQue este cumpleaños marque el inicio de un año lleno de metas cumplidas, nuevos sueños y caminos que te acerquen a todo lo que deseas, confía siempre en ti, en tu fuerza y en tu capacidad para lograr cosas grandes, la vida tiene mucho preparado para ti y estoy seguro de que lo mejor aún está por venir, nunca dejes de creer en lo que puedes lograr.",
+      "✨ Mensaje 5\n\nEn este día tan especial quiero desearte algo más que un feliz cumpleaños, Davy, te deseo paz en el corazón, sueños que te inspiren, personas que te acompañen y momentos que se queden para siempre en tu memoria, que encuentres felicidad en los pequeños detalles y que cada día tenga algo que te haga sonreír, que la vida te sorprenda siempre con cosas hermosas."
+    ];
+
+    $("#gifts").addEventListener("pointerup",(e)=>{
+      const g = e.target.closest(".gift");
+      if(!g) return;
+      const idx = parseInt(g.dataset.g,10);
+      modalTag.textContent = `🎁 Regalo ${idx+1}`;
+      if(idx === 3){
+  modalBody.innerHTML = `
+    <div style="font-weight:900; margin-bottom:10px;">📸 Foto</div>
+    <img src="davy.jpg" style="width:100%; border-radius:14px; display:block;" alt="Davy" />
+    <div style="margin-top:10px; opacity:.85; font-size:13px;">
+        De tus niños para tí❤️🎂🎉
+    </div>
+  `;
+} else {
+  modalBody.textContent = messages[idx] || "Sorpresa ✨";
+}
+
+      modal.classList.add("show");
+      confettiBurst(window.innerWidth*0.5, window.innerHeight*0.2, 120);
+      logDebug("Regalo abierto ✅");
+    });
+
+    modalClose.addEventListener("pointerup", ()=> modal.classList.remove("show"));
+    modal.addEventListener("pointerup",(e)=>{ if(e.target===modal) modal.classList.remove("show"); });
+
+    // ===== Nombre =====
+    const nameInput = $("#nameInput");
+    const btnApply = $("#btnApply");
+    const titleEl = $("#title");
+    nameInput.value = "Davy";
+
+    function applyName(){
+      const name = (nameInput.value || "").trim() || "Davy";
+      titleEl.textContent = `🎉 ¡Feliz Cumple, ${name}!`;
+      confettiBurst(window.innerWidth/2, window.innerHeight*0.22, 120);
+      sparkAt(window.innerWidth/2, window.innerHeight*0.28, 12);
+      logDebug("Nombre aplicado ✅");
+    }
+    btnApply.addEventListener("pointerup", applyName);
+
+    // ===== Mood =====
+    const moodRange = $("#moodRange");
+    const moodLabel = $("#moodLabel");
+    function setMood(v){
+      let text="✨ Dulce";
+      if(v<20) text="🌙 Tranquilo";
+      else if(v<40) text="🙂 Relax";
+      else if(v<60) text="✨ Dulce";
+      else if(v<80) text="🎉 Fiesta";
+      else text="🚀 ÉPICO";
+      moodLabel.textContent = "Mood: " + text;
+      $("#stage").style.filter = `saturate(${0.9 + v/140}) hue-rotate(${(v-50)/2}deg)`;
+    }
+    moodRange.addEventListener("input", ()=> setMood(parseInt(moodRange.value,10)));
+    setMood(parseInt(moodRange.value,10));
+
+    // ===== Botones =====
+    $("#btnConfetti").addEventListener("pointerup", ()=>{
+      confettiBurst(window.innerWidth/2, window.innerHeight*0.25, 260);
+      sparkAt(window.innerWidth/2, window.innerHeight*0.25, 18);
+      logDebug("Confetti ✅");
+    });
+    $("#btnBalloons").addEventListener("pointerup", ()=>{
+      addBalloons(5);
+      sparkAt(window.innerWidth*0.55, window.innerHeight*0.3, 10);
+      logDebug("Más globos ✅");
+    });
+    $("#btnParty").addEventListener("pointerup", ()=>{
+      confettiBurst(window.innerWidth*0.5, window.innerHeight*0.25, 340);
+      addBalloons(7);
+      sparkAt(window.innerWidth*0.5, window.innerHeight*0.3, 22);
+      hint.textContent = "🎉 Modo fiesta activado: toca el fondo y revienta globos (doble toque).";
+      logDebug("Modo fiesta ✅");
+    });
+    $("#btnReset").addEventListener("pointerup", ()=>{
+      modal.classList.remove("show");
+      flamesOn = 3;
+      document.querySelectorAll(".candle").forEach(c=>{
+        c.dataset.off="0";
+        c.querySelectorAll(".flame").forEach(f=>f.style.opacity="1");
+      });
+      hint.textContent = "👉 Toca una vela para apagarla. Apaga las 3 para sorpresa 🎊";
+      confettiLayer.innerHTML="";
+      sparkLayer.innerHTML="";
+      balloonLayer.innerHTML="";
+      addBalloons(3);
+      nameInput.value = "Davy";
+      applyName();
+      logDebug("Reiniciado ✅");
+    });
+
+    // Inicio
+    addBalloons(3);
+    applyName();
+
+    // Resize fix
+    window.addEventListener("resize", ()=>{
+      document.querySelectorAll(".balloon").forEach(b=>{
+        const r=b.getBoundingClientRect();
+        const x = clamp(r.left, 6, window.innerWidth - r.width - 6);
+        const y = clamp(r.top, 6, window.innerHeight - r.height - 6);
+        b.style.left = x+"px";
+        b.style.top  = y+"px";
+      });
+    });
+  </script>
+</body>
+</html>
+
